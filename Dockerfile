@@ -2,8 +2,7 @@ FROM alpine:latest
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION 7.0.5
-ENV PHP_FILENAME php-7.0.5.tar.xz
+ENV PHP_VERSION=7.0.6 PHP_FILENAME=php-7.0.6.tar.xz NEWRELIC_FILENAME=newrelic-php5-6.2.1.0-linux-musl.tar.gz
 
 RUN \
     addgroup -S nginx \
@@ -85,6 +84,8 @@ RUN \
             | sort -u \
     )" \
     && apk add --virtual .php-rundeps $runDeps \
+    && mkdir /etc/php/conf.d/ \
+    && echo "zend_extension=opcache.so" >> "/etc/php/conf.d/docker-php-ext-opcache.ini" \
 
     # install xdebug (but it will be disabled, see /etc/php/conf.d/xdebug.ini)
     && cd /tmp \
@@ -93,9 +94,18 @@ RUN \
     && git checkout master \
     && phpize && ./configure --enable-xdebug && make \
     && cp modules/xdebug.so /usr/lib/php/extensions/no-debug-non-zts-20151012 \
-    && mkdir /etc/php/conf.d/ \
     && echo "zend_extension=xdebug.so" >> "/etc/php/conf.d/docker-php-ext-xdebug.ini" \
-    && echo "zend_extension=opcache.so" >> "/etc/php/conf.d/docker-php-ext-opcache.ini" \
+
+    # install newrelic apm agent
+    && apk add --update --no-cache tar \
+    && curl -fSL "https://download.newrelic.com/php_agent/release/$NEWRELIC_FILENAME" -o "newrelic.tar.gz" \
+    && mkdir -p /tmp/newrelic /var/log/newrelic \
+    && tar --strip-components=1 -xzf "newrelic.tar.gz" -C /tmp/newrelic \
+    && rm "newrelic.tar.gz" \
+    && cd /tmp/newrelic \
+    && cp agent/x64/newrelic-20151012.so /usr/lib/php/extensions/no-debug-non-zts-20151012/newrelic.so \
+    && cp daemon/newrelic-daemon.x64 /usr/bin/newrelic-daemon \
+    && cp scripts/newrelic.ini.template /etc/php/conf.d/newrelic.ini \
 
     # remove PHP dev dependencies
     && apk del .build-deps \
@@ -122,7 +132,13 @@ RUN \
     } | tee php-fpm.d/docker.conf
 
 COPY ./www.conf /etc/php/php-fpm.d/www.conf
-COPY ./opcache.ini /etc/php/conf.d/
+COPY ./opcache.ini ./xdebug.ini /etc/php/conf.d/
+
+COPY ./docker-entrypoint.sh /
+
+RUN chmod +x /docker-entrypoint.sh
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 9000
 
