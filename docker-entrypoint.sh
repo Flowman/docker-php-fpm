@@ -15,6 +15,7 @@ if [ "$1" = 'php-fpm' ]; then
         sed -i -e 's/zend_extension=xdebug.so/;zend_extension=xdebug.so/g' /etc/php/conf.d/docker-php-ext-xdebug.ini
 
         if [ "$NEWRELIC_KEY" ]; then
+            sed -i -e 's/REPLACE_WITH_REAL_KEY/$NEWRELIC_KEY/g' /etc/php/conf.d/newrelic.ini
         fi
 
         if [ "$NEWRELIC_APP_NAME" ]; then
