@@ -6,9 +6,11 @@ PHP-FPM (FastCGI Process Manager) is an alternative PHP FastCGI implementation w
 
 ## Info
 
-This container is not meant to be run standalone as it is part of a [Rancher](https//rancher.com) Catalog item. If it suites your purpose you are more then welcome to use it.
+This container is not meant to be run standalone as it is part of a [Rancher](http://rancher.com) Catalog item. If it suites your purpose you are more then welcome to use it.
 
 The container is optimized to run !Joomla with Nginx, so some PHP modules have been striped out. Check the build section to customize this container for your needs.
+
+This image is based on the popular Alpine Linux project, available in the alpine official image. Alpine Linux is much smaller than most distribution base images (~5MB), and thus leads to much slimmer images in general.
 
 ## Usage
 
