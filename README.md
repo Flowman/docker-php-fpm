@@ -14,35 +14,32 @@ This image is based on the popular Alpine Linux project, available in the alpine
 
 ## Usage
 
-```
-$ docker run -d flowman/php-fpm:tag
+```bash
+docker run -d flowman/php-fpm:tag
 ```
 
 To enable New Relic APM
 
-```
-$ docker run -d -e NEWRELIC_KEY=xxxxxx -e NEWRELIC_APP_NAME="Awesome PHP App" flowman/php-fpm:tag
+```bash
+docker run -d \
+           -e NEWRELIC_KEY=xxxxxx \
+           -e NEWRELIC_APP_NAME="Awesome PHP App" \
+           flowman/php-fpm:tag
 ```
 
 ### Environment Variables
 
-```
-NEWRELIC_KEY
-```
+`NEWRELIC_KEY`
 
 This variable is optional and will enable [New Relic APM](https://newrelic.com/application-monitoring) to monitor your php application. Enter your New Relic license key.
 
 This will disable xdebug as APM is not compatible with it.
 
-```
-NEWRELIC_APP_NAME
-```
+`NEWRELIC_APP_NAME`
 
 This variable is optional and is used to set the application name for APM.
 
-```
-XDEBUG
-```
+`XDEBUG`
 
 This variable is optional and will enable xdebug.
 
@@ -50,7 +47,7 @@ This variable is optional and will enable xdebug.
 
 Example Rancher docker-compose stack
 
-```
+```yaml
 nginx:
   image: flowman/nginx:1.10.0
   labels:
@@ -76,7 +73,7 @@ www-data:
 
 Example docker-compose file
 
-```
+```yaml
 version: '2'
 services:
   nginx:
@@ -101,7 +98,7 @@ services:
 
 For example, if you need to install or remove php extensions, edit the Dockerfile and than build-it.
 
-```
+```bash
 git clone git@github.com:Flowman/docker-php-fpm.git
 cd ./docker-php-fpm
 docker build --rm -t flowman/php-fpm .
