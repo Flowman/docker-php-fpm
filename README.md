@@ -46,30 +46,55 @@ XDEBUG
 
 This variable is optional and will enable xdebug.
 
-## Create Rancher Stack
+## ... via `docker-compose`
 
-Docker-compose example for a Rancher stack.
+Example Rancher docker-compose stack
 
 ```
 nginx:
-  image: flowman/nginx:1.9.14-alpine
+  image: flowman/nginx:1.10.0
   labels:
     io.rancher.sidekicks: php-fpm, www-data
   volumes_from:
     - 'www-data'
+  ports:
+   - "80:80"
 php-fpm:
   image: flowman/php-fpm:7.0.6
   net: "container:nginx"
   volumes_from:
     - 'www-data'
   environment:
-    - XDEBUG: true
+    XDEBUG: 'true'
 www-data:
   image: flowman/joomla:3.5.1
   net: none
   command: /bin/true
   labels:
     io.rancher.container.start_once: true
+```
+
+Example docker-compose file
+
+```
+version: '2'
+services:
+  nginx:
+    image: flowman/nginx:1.10.0
+    ports:
+     - "80:80"
+    volumes_from:
+      - 'joomla'
+  php-fpm:
+    image: flowman/php-fpm:7.0.6
+    network_mode: "service:nginx"
+    volumes_from:
+      - 'joomla'
+    environment:
+      XDEBUG: 'true'
+  joomla:
+    image: flowman/joomla:3.5.1
+    network_mode: none
 ```
 
 ## Build
