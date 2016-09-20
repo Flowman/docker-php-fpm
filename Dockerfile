@@ -2,7 +2,7 @@ FROM alpine:latest
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.0.6 PHP_FILENAME=php-7.0.6.tar.xz NEWRELIC_FILENAME=newrelic-php5-6.2.1.0-linux-musl.tar.gz
+ENV PHP_VERSION=7.0.11 PHP_FILENAME=php-7.0.11.tar.xz NEWRELIC_FILENAME=newrelic-php5-6.6.1.172-linux-musl.tar.gz
 
 RUN \
     addgroup -S nginx \
