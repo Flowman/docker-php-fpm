@@ -7,7 +7,7 @@ ENV PHP_VERSION=7.0.11 PHP_FILENAME=php-7.0.11.tar.xz NEWRELIC_FILENAME=newrelic
 RUN \
     addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-    && echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
+    && echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
     && apk add --update \
         curl \
         libxml2 \
@@ -17,7 +17,7 @@ RUN \
         libpng \
         libwebp \
         libedit \
-        libzip@testing \
+        libzip@community \
     && apk add --no-cache --virtual .build-deps \
         git \
         autoconf \
