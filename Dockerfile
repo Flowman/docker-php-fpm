@@ -2,7 +2,7 @@ FROM alpine:latest
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.0.11 PHP_FILENAME=php-7.0.11.tar.xz NEWRELIC_FILENAME=newrelic-php5-6.6.1.172-linux-musl.tar.gz
+ENV PHP_VERSION=7.0.11 PHP_FILENAME=php-7.0.11.tar.xz NEWRELIC_FILENAME=newrelic-php5-6.7.0.174-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.14.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
 
 RUN \
     addgroup -S nginx \
@@ -10,6 +10,8 @@ RUN \
     && echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
     && apk add --update \
         curl \
+        tar \
+        xz \
         libxml2 \
         readline \
         freetype \
@@ -40,10 +42,29 @@ RUN \
         libwebp-dev \
         libmcrypt-dev \
         libedit-dev \
+
+    # remove origin iconv
+    && rm /usr/bin/iconv \
+
+    # download sources
+    && cd /tmp \
+    && curl -fSL "http://ftp.gnu.org/pub/gnu/libiconv/$LIBICONV_FILENAME" -o "$LIBICONV_FILENAME" \
+    && mkdir -p /tmp/libiconv \
+    && tar -xzf "$LIBICONV_FILENAME" -C /tmp/libiconv --strip-components=1 \
+    && rm "$LIBICONV_FILENAME" \
+    && cd /tmp/libiconv/srclib \
+    && curl -fSL "https://raw.githubusercontent.com/Flowman/docker-php-fpm/master/libiconv.diff" -o "libiconv.diff" \
+    && patch stdio.in.h < libiconv.diff \
+    && cd /tmp/libiconv \
+    && ./configure --prefix=/usr/local  \
+    && make \
+    && make install \
+
+    # download sources
+    && cd /tmp \
     && curl -fSL "http://php.net/get/$PHP_FILENAME/from/this/mirror" -o "$PHP_FILENAME" \
-    && mkdir -p /usr/src \
-    && tar -Jxf "$PHP_FILENAME" -C /usr/src \
-    && mv "/usr/src/php-$PHP_VERSION" /tmp/php \
+    && mkdir -p /tmp/php \
+    && tar -Jxf "$PHP_FILENAME" -C /tmp/php --strip-components=1 \
     && rm "$PHP_FILENAME" \
     && cd /tmp/php \
     && ./configure \
@@ -70,6 +91,8 @@ RUN \
         --with-zlib \
         --with-mysqli \
         --with-gd --with-jpeg-dir=/usr --with-webp-dir=/usr --with-png-dir=/usr \
+        --with-iconv \
+        --with-iconv-dir=/usr/local \
         --without-sqlite3 \
         --without-pdo-sqlite \
     && make \
@@ -90,18 +113,18 @@ RUN \
     # install xdebug (but it will be disabled, see /etc/php/conf.d/xdebug.ini)
     && cd /tmp \
     && git clone https://github.com/xdebug/xdebug.git \
-    && cd xdebug \
+    && cd /tmp/xdebug \
     && git checkout master \
     && phpize && ./configure --enable-xdebug && make \
     && cp modules/xdebug.so /usr/lib/php/extensions/no-debug-non-zts-20151012 \
     && echo "zend_extension=xdebug.so" >> "/etc/php/conf.d/docker-php-ext-xdebug.ini" \
 
     # install newrelic apm agent
-    && apk add --update --no-cache tar \
-    && curl -fSL "https://download.newrelic.com/php_agent/release/$NEWRELIC_FILENAME" -o "newrelic.tar.gz" \
+    && cd /tmp \
+    && curl -fSL "https://download.newrelic.com/php_agent/release/$NEWRELIC_FILENAME" -o "$NEWRELIC_FILENAME" \
     && mkdir -p /tmp/newrelic /var/log/newrelic \
-    && tar --strip-components=1 -xzf "newrelic.tar.gz" -C /tmp/newrelic \
-    && rm "newrelic.tar.gz" \
+    && tar -xzf "$NEWRELIC_FILENAME" -C /tmp/newrelic --strip-components=1 \
+    && rm "$NEWRELIC_FILENAME" \
     && cd /tmp/newrelic \
     && cp agent/x64/newrelic-20151012.so /usr/lib/php/extensions/no-debug-non-zts-20151012/newrelic.so \
     && cp daemon/newrelic-daemon.x64 /usr/bin/newrelic-daemon \
