@@ -2,12 +2,11 @@ FROM alpine:latest
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.0.11 PHP_FILENAME=php-7.0.11.tar.xz NEWRELIC_FILENAME=newrelic-php5-6.7.0.174-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.14.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
+ENV PHP_VERSION=7.1.3 PHP_FILENAME=php-7.1.3.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.1.0.187-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.14.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
 
 RUN \
     addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-    && echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
     && apk add --update \
         curl \
         tar \
@@ -19,7 +18,7 @@ RUN \
         libpng \
         libwebp \
         libedit \
-        libzip@community \
+        libzip \
     && apk add --no-cache --virtual .build-deps \
         git \
         autoconf \
