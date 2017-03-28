@@ -1,12 +1,13 @@
-FROM alpine:latest
+FROM alpine:3.3
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.1.3 PHP_FILENAME=php-7.1.3.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.1.0.187-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.14.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
+ENV PHP_VERSION=7.1.3 PHP_FILENAME=php-7.1.3.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.1.0.187-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
 
 RUN \
     addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
+    && echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
     && apk add --update \
         curl \
         tar \
@@ -18,7 +19,7 @@ RUN \
         libpng \
         libwebp \
         libedit \
-        libzip \
+        libzip@community \
     && apk add --no-cache --virtual .build-deps \
         git \
         autoconf \
@@ -33,7 +34,6 @@ RUN \
         libedit-dev \
         libxml2-dev \
         openssl-dev \
-        sqlite-dev \
         readline-dev \
         freetype-dev \
         libjpeg-turbo-dev \
@@ -51,10 +51,8 @@ RUN \
     && mkdir -p /tmp/libiconv \
     && tar -xzf "$LIBICONV_FILENAME" -C /tmp/libiconv --strip-components=1 \
     && rm "$LIBICONV_FILENAME" \
-    && cd /tmp/libiconv/srclib \
-    && curl -fSL "https://raw.githubusercontent.com/Flowman/docker-php-fpm/master/libiconv.diff" -o "libiconv.diff" \
-    && patch stdio.in.h < libiconv.diff \
     && cd /tmp/libiconv \
+    && sed -i 's/_GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");/#if HAVE_RAW_DECL_GETS\n_GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");\n#endif/g' srclib/stdio.in.h \
     && ./configure --prefix=/usr/local  \
     && make \
     && make install \
