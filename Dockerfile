@@ -1,13 +1,13 @@
-FROM alpine:3.3
+FROM alpine:3.5
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.1.3 PHP_FILENAME=php-7.1.3.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.1.0.187-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
+ENV PHP_VERSION=7.1.4 PHP_FILENAME=php-7.1.4.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.2.0.191-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
 
 RUN \
     addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-    && echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
+    #&& echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
     && apk add --update \
         curl \
         tar \
@@ -19,7 +19,9 @@ RUN \
         libpng \
         libwebp \
         libedit \
-        libzip@community \
+        libmcrypt \
+        #libzip@community \
+        libbz2 \
     && apk add --no-cache --virtual .build-deps \
         git \
         autoconf \
@@ -33,7 +35,6 @@ RUN \
         curl-dev \
         libedit-dev \
         libxml2-dev \
-        openssl-dev \
         readline-dev \
         freetype-dev \
         libjpeg-turbo-dev \
@@ -42,9 +43,6 @@ RUN \
         libmcrypt-dev \
         libedit-dev \
 
-    # remove origin iconv
-    && rm /usr/bin/iconv \
-
     # download sources
     && cd /tmp \
     && curl -fSL "http://ftp.gnu.org/pub/gnu/libiconv/$LIBICONV_FILENAME" -o "$LIBICONV_FILENAME" \
@@ -52,7 +50,7 @@ RUN \
     && tar -xzf "$LIBICONV_FILENAME" -C /tmp/libiconv --strip-components=1 \
     && rm "$LIBICONV_FILENAME" \
     && cd /tmp/libiconv \
-    && sed -i 's/_GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");/#if HAVE_RAW_DECL_GETS\n_GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");\n#endif/g' srclib/stdio.in.h \
+    #&& sed -i 's/_GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");/#if HAVE_RAW_DECL_GETS\n_GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");\n#endif/g' srclib/stdio.in.h \
     && ./configure --prefix=/usr/local  \
     && make \
     && make install \
@@ -66,30 +64,38 @@ RUN \
     && cd /tmp/php \
     && ./configure \
         --prefix=/usr \
+        --libdir=/usr/lib/php \
+        --datadir=/usr/share/php \
         --sysconfdir=/etc/php \
-        --with-config-file-path=/etc/php \
+        --localstatedir=/etc/php/var \
+        --with-pear=/usr/share/php \
         --with-config-file-scan-dir=/etc/php/conf.d \
-        --enable-fpm --with-fpm-user=nginx --with-fpm-group=nginx \
-        --disable-rpath \
-        --disable-static \
+        --with-config-file-path=/etc/php \
         --disable-debug \
         --disable-cgi \
+        --disable-gd-jis-conv \
+        --disable-short-tags \
+        --enable-fpm --with-fpm-user=nginx --with-fpm-group=nginx \
         --enable-mysqlnd \
         --enable-mbstring \
+        --enable-gd-native-ttf \
         --enable-opcache \
         --enable-zip \
-        --enable-libxml --with-libxml-dir=/usr \
-        --with-libdir=/lib/x86_64-linux-gnu \
-        --with-freetype-dir=/usr \
-        --with-zlib --with-zlib-dir=/usr \
+        --enable-libxml --with-libxml-dir \
+        --with-mysqli \
         --with-curl \
         --with-libedit \
         --with-openssl \
+        --with-mcrypt \
+        --with-iconv=/usr/local \
+        --with-gd \
+        --with-jpeg-dir \
+        --with-png-dir \
+        --with-webp-dir \
+        --with-xpm-dir=no \
+        --with-freetype-dir \
         --with-zlib \
-        --with-mysqli \
-        --with-gd --with-jpeg-dir=/usr --with-webp-dir=/usr --with-png-dir=/usr \
-        --with-iconv \
-        --with-iconv-dir=/usr/local \
+        --without-readline \
         --without-sqlite3 \
         --without-pdo-sqlite \
     && make \
@@ -114,7 +120,7 @@ RUN \
     && git checkout master \
     && phpize && ./configure --enable-xdebug && make \
     && cp modules/xdebug.so /usr/lib/php/extensions/no-debug-non-zts-20160303 \
-    && echo "zend_extension=xdebug.so" >> "/etc/php/conf.d/docker-php-ext-xdebug.ini" \
+    && echo ";zend_extension=xdebug.so" >> "/etc/php/conf.d/docker-php-ext-xdebug.ini" \
 
     # install newrelic apm agent
     && cd /tmp \
@@ -153,10 +159,7 @@ RUN \
 
 COPY ./www.conf /etc/php/php-fpm.d/www.conf
 COPY ./opcache.ini ./xdebug.ini /etc/php/conf.d/
-
 COPY ./docker-entrypoint.sh /
-
-RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
