@@ -2,12 +2,11 @@ FROM alpine:3.5
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.1.4 PHP_FILENAME=php-7.1.4.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.2.0.191-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
+ENV PHP_VERSION=7.2.0 PHP_FILENAME=php-7.2.0.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.6.0.201-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
 
 RUN \
     addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-    #&& echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
     && apk add --update \
         curl \
         tar \
@@ -20,7 +19,6 @@ RUN \
         libwebp \
         libedit \
         libmcrypt \
-        #libzip@community \
         libbz2 \
     && apk add --no-cache --virtual .build-deps \
         git \
@@ -50,7 +48,6 @@ RUN \
     && tar -xzf "$LIBICONV_FILENAME" -C /tmp/libiconv --strip-components=1 \
     && rm "$LIBICONV_FILENAME" \
     && cd /tmp/libiconv \
-    #&& sed -i 's/_GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");/#if HAVE_RAW_DECL_GETS\n_GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");\n#endif/g' srclib/stdio.in.h \
     && ./configure --prefix=/usr/local  \
     && make \
     && make install \
@@ -160,6 +157,8 @@ RUN \
 COPY ./www.conf /etc/php/php-fpm.d/www.conf
 COPY ./opcache.ini ./xdebug.ini /etc/php/conf.d/
 COPY ./docker-entrypoint.sh /
+
+RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
