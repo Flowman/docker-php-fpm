@@ -116,7 +116,7 @@ RUN \
     && cd /tmp/xdebug \
     && git checkout master \
     && phpize && ./configure --enable-xdebug && make \
-    && cp modules/xdebug.so /usr/lib/php/extensions/no-debug-non-zts-20160303 \
+    && cp modules/xdebug.so /usr/lib/php/extensions/no-debug-non-zts-20170718 \
     && echo ";zend_extension=xdebug.so" >> "/etc/php/conf.d/docker-php-ext-xdebug.ini" \
 
     # install newrelic apm agent
@@ -126,7 +126,7 @@ RUN \
     && tar -xzf "$NEWRELIC_FILENAME" -C /tmp/newrelic --strip-components=1 \
     && rm "$NEWRELIC_FILENAME" \
     && cd /tmp/newrelic \
-    && cp agent/x64/newrelic-20160303.so /usr/lib/php/extensions/no-debug-non-zts-20160303/newrelic.so \
+    && cp agent/x64/newrelic-20160303.so /usr/lib/php/extensions/no-debug-non-zts-20170718/newrelic.so \
     && cp daemon/newrelic-daemon.x64 /usr/bin/newrelic-daemon \
     && cp scripts/newrelic.ini.template /etc/php/conf.d/newrelic.ini \
 
