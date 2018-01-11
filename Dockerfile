@@ -1,8 +1,8 @@
-FROM alpine:3.5
+FROM alpine:3.7
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.2.0 PHP_FILENAME=php-7.2.0.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.6.0.201-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
+ENV PHP_VERSION=7.2.1 PHP_FILENAME=php-7.2.1.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.7.0.203-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
 
 RUN \
     addgroup -S nginx \
@@ -20,6 +20,7 @@ RUN \
         libedit \
         libmcrypt \
         libbz2 \
+        libzip \
     && apk add --no-cache --virtual .build-deps \
         git \
         autoconf \
@@ -40,6 +41,8 @@ RUN \
         libwebp-dev \
         libmcrypt-dev \
         libedit-dev \
+        libressl-dev \
+        libzip-dev \
 
     # download sources
     && cd /tmp \
@@ -126,7 +129,7 @@ RUN \
     && tar -xzf "$NEWRELIC_FILENAME" -C /tmp/newrelic --strip-components=1 \
     && rm "$NEWRELIC_FILENAME" \
     && cd /tmp/newrelic \
-    && cp agent/x64/newrelic-20160303.so /usr/lib/php/extensions/no-debug-non-zts-20170718/newrelic.so \
+    && cp agent/x64/newrelic-20170718.so /usr/lib/php/extensions/no-debug-non-zts-20170718/newrelic.so \
     && cp daemon/newrelic-daemon.x64 /usr/bin/newrelic-daemon \
     && cp scripts/newrelic.ini.template /etc/php/conf.d/newrelic.ini \
 

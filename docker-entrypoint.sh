@@ -2,8 +2,8 @@
 
 set -e
 
-# if command starts with an option, prepend dovecot
-if [ "${1:0:1}" = '-' ]; then
+# first arg is `-f` or `--some-option`
+if [ "${1#-}" != "$1" ]; then
     set -- php-fpm "$@"
 fi
 
@@ -29,6 +29,18 @@ if [ "$1" = 'php-fpm' ]; then
         sed -i -e 's/extension = "newrelic.so"/;extension = "newrelic.so"/g' /etc/php/conf.d/newrelic.ini
         sed -i -e 's/zend_extension=opcache.so/;zend_extension=opcache.so/g' /etc/php/conf.d/docker-php-ext-opcache.ini
     fi
+
+    appDir=/app
+    if [ "$SHARE_APP" == "1" ]; then
+      mkdir -p /shared
+      cp -rf /app/* /shared/
+      chown -R nginx:nginx /shared/*
+      appDir=/shared
+    fi
+
+    mkdir -p /usr/share/nginx
+    ln -s $appDir /usr/share/nginx/html
+    chown -R nginx:nginx /usr/share/nginx/html
 
 fi
 
