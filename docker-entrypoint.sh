@@ -30,18 +30,6 @@ if [ "$1" = 'php-fpm' ]; then
         sed -i -e 's/zend_extension=opcache.so/;zend_extension=opcache.so/g' /etc/php/conf.d/docker-php-ext-opcache.ini
     fi
 
-    appDir=/app
-    if [ "$SHARE_APP" == "1" ]; then
-      mkdir -p /shared
-      cp -rf /app/* /shared/
-      chown -R nginx:nginx /shared/*
-      appDir=/shared
-    fi
-
-    mkdir -p /usr/share/nginx
-    ln -s $appDir /usr/share/nginx/html
-    chown -R nginx:nginx /usr/share/nginx/html
-
 fi
 
 exec "$@"
