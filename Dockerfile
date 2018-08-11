@@ -1,8 +1,8 @@
-FROM alpine:3.7
+FROM alpine:3.8
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.2.1 PHP_FILENAME=php-7.2.1.tar.xz NEWRELIC_FILENAME=newrelic-php5-7.7.0.203-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
+ENV PHP_VERSION=7.2.8 PHPREDIS_FILENAME=4.1.1.tar.gz PHP_FILENAME=php-7.2.8.tar.xz NEWRELIC_FILENAME=newrelic-php5-8.1.0.209-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
 
 RUN \
     addgroup -S nginx \
@@ -43,7 +43,6 @@ RUN \
         libedit-dev \
         libressl-dev \
         libzip-dev \
-
     # download sources
     && cd /tmp \
     && curl -fSL "http://ftp.gnu.org/pub/gnu/libiconv/$LIBICONV_FILENAME" -o "$LIBICONV_FILENAME" \
@@ -54,8 +53,6 @@ RUN \
     && ./configure --prefix=/usr/local  \
     && make \
     && make install \
-
-    # download sources
     && cd /tmp \
     && curl -fSL "http://php.net/get/$PHP_FILENAME/from/this/mirror" -o "$PHP_FILENAME" \
     && mkdir -p /tmp/php \
@@ -112,16 +109,21 @@ RUN \
     && apk add --virtual .php-rundeps $runDeps \
     && mkdir /etc/php/conf.d/ \
     && echo "zend_extension=opcache.so" >> "/etc/php/conf.d/docker-php-ext-opcache.ini" \
-
+    # install phpredis
+    && cd /tmp \
+    && curl -fSL "https://github.com/phpredis/phpredis/archive/$PHPREDIS_FILENAME" -o "$PHPREDIS_FILENAME" \
+    && mkdir -p /tmp/phpredis \
+    && tar -xzf "$PHPREDIS_FILENAME" -C /tmp/phpredis --strip-components=1 \
+    && cd /tmp/phpredis \
+    && phpize && ./configure && make install \
+    && echo "extension=redis.so" >> "/etc/php/conf.d/docker-php-ext-redis.ini" \
     # install xdebug (but it will be disabled, see /etc/php/conf.d/xdebug.ini)
     && cd /tmp \
     && git clone https://github.com/xdebug/xdebug.git \
     && cd /tmp/xdebug \
     && git checkout master \
-    && phpize && ./configure --enable-xdebug && make \
-    && cp modules/xdebug.so /usr/lib/php/extensions/no-debug-non-zts-20170718 \
+    && phpize && ./configure --enable-xdebug && make install \
     && echo ";zend_extension=xdebug.so" >> "/etc/php/conf.d/docker-php-ext-xdebug.ini" \
-
     # install newrelic apm agent
     && cd /tmp \
     && curl -fSL "https://download.newrelic.com/php_agent/release/$NEWRELIC_FILENAME" -o "$NEWRELIC_FILENAME" \
@@ -132,11 +134,9 @@ RUN \
     && cp agent/x64/newrelic-20170718.so /usr/lib/php/extensions/no-debug-non-zts-20170718/newrelic.so \
     && cp daemon/newrelic-daemon.x64 /usr/bin/newrelic-daemon \
     && cp scripts/newrelic.ini.template /etc/php/conf.d/newrelic.ini \
-
     # remove PHP dev dependencies
     && apk del .build-deps \
     && rm -rf /tmp/* \
-
     && cd /etc/php \
     && if [ -d php-fpm.d ]; then \
         # for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf"
