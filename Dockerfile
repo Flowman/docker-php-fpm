@@ -2,11 +2,12 @@ FROM alpine:3.8
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.2.8 PHPREDIS_FILENAME=4.1.1.tar.gz PHP_FILENAME=php-7.2.8.tar.xz NEWRELIC_FILENAME=newrelic-php5-8.1.0.209-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
+ENV PHP_VERSION=7.2.9 PHPREDIS_FILENAME=4.1.1.tar.gz PHP_FILENAME=php-7.2.9.tar.xz NEWRELIC_FILENAME=newrelic-php5-8.1.0.209-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
 
 RUN \
     addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
+    && echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
     && apk add --update \
         curl \
         tar \
@@ -21,6 +22,7 @@ RUN \
         libmcrypt \
         libbz2 \
         libzip \
+        ssmtp@edge \
     && apk add --no-cache --virtual .build-deps \
         git \
         autoconf \
