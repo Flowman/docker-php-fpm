@@ -1,13 +1,12 @@
-FROM alpine:3.8
+FROM alpine:3.9
 
 MAINTAINER Peter Szalatnay <theotherland@gmail.com>
 
-ENV PHP_VERSION=7.2.9 PHPREDIS_FILENAME=4.1.1.tar.gz PHP_FILENAME=php-7.2.9.tar.xz NEWRELIC_FILENAME=newrelic-php5-8.1.0.209-linux-musl.tar.gz LIBICONV_FILENAME=libiconv-1.15.tar.gz LD_PRELOAD=/usr/local/lib/preloadable_libiconv.so
+ENV PHP_VERSION=7.3.2 PHPREDIS_FILENAME=4.2.0.tar.gz PHP_FILENAME=php-7.3.2.tar.xz NEWRELIC_FILENAME=newrelic-php5-8.5.0.235-linux-musl.tar.gz
 
 RUN \
     addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-    && echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
     && apk add --update \
         curl \
         tar \
@@ -22,7 +21,6 @@ RUN \
         libmcrypt \
         libbz2 \
         libzip \
-        ssmtp@edge \
     && apk add --no-cache --virtual .build-deps \
         git \
         autoconf \
@@ -43,18 +41,9 @@ RUN \
         libwebp-dev \
         libmcrypt-dev \
         libedit-dev \
-        libressl-dev \
+        libssh2-dev \
         libzip-dev \
     # download sources
-    && cd /tmp \
-    && curl -fSL "http://ftp.gnu.org/pub/gnu/libiconv/$LIBICONV_FILENAME" -o "$LIBICONV_FILENAME" \
-    && mkdir -p /tmp/libiconv \
-    && tar -xzf "$LIBICONV_FILENAME" -C /tmp/libiconv --strip-components=1 \
-    && rm "$LIBICONV_FILENAME" \
-    && cd /tmp/libiconv \
-    && ./configure --prefix=/usr/local  \
-    && make \
-    && make install \
     && cd /tmp \
     && curl -fSL "http://php.net/get/$PHP_FILENAME/from/this/mirror" -o "$PHP_FILENAME" \
     && mkdir -p /tmp/php \
@@ -77,7 +66,6 @@ RUN \
         --enable-fpm --with-fpm-user=nginx --with-fpm-group=nginx \
         --enable-mysqlnd \
         --enable-mbstring \
-        --enable-gd-native-ttf \
         --enable-opcache \
         --enable-zip \
         --enable-libxml --with-libxml-dir \
@@ -85,8 +73,6 @@ RUN \
         --with-curl \
         --with-libedit \
         --with-openssl \
-        --with-mcrypt \
-        --with-iconv=/usr/local \
         --with-gd \
         --with-jpeg-dir \
         --with-png-dir \
@@ -133,7 +119,7 @@ RUN \
     && tar -xzf "$NEWRELIC_FILENAME" -C /tmp/newrelic --strip-components=1 \
     && rm "$NEWRELIC_FILENAME" \
     && cd /tmp/newrelic \
-    && cp agent/x64/newrelic-20170718.so /usr/lib/php/extensions/no-debug-non-zts-20170718/newrelic.so \
+    && cp agent/x64/newrelic-20180731.so /usr/lib/php/extensions/no-debug-non-zts-20180731/newrelic.so \
     && cp daemon/newrelic-daemon.x64 /usr/bin/newrelic-daemon \
     && cp scripts/newrelic.ini.template /etc/php/conf.d/newrelic.ini \
     # remove PHP dev dependencies
