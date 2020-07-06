@@ -1,12 +1,8 @@
-[![](https://badge.imagelayers.io/flowman/php-fpm:latest.svg)](https://imagelayers.io/?images=flowman/php-fpm:latest 'Get your own badge on imagelayers.io')
-
 # What is PHP-FPM?
 
 PHP-FPM (FastCGI Process Manager) is an alternative PHP FastCGI implementation with some additional features useful for sites of any size, especially busier sites.
 
 ## Info
-
-This container is not meant to be run standalone as it is part of a [Rancher](http://rancher.com) Catalog item. If it suites your purpose you are more then welcome to use it.
 
 The container is optimized to run !Joomla with Nginx, so some PHP modules have been striped out. Check the build section to customize this container for your needs.
 
@@ -45,52 +41,26 @@ This variable is optional and will enable xdebug.
 
 ## ... via `docker-compose`
 
-Example Rancher docker-compose stack
-
-```yaml
-nginx:
-  image: flowman/nginx:1.10.0
-  labels:
-    io.rancher.sidekicks: php-fpm, www-data
-  volumes_from:
-    - 'www-data'
-  ports:
-   - "80:80"
-php-fpm:
-  image: flowman/php-fpm:7.0.6
-  net: "container:nginx"
-  volumes_from:
-    - 'www-data'
-  environment:
-    XDEBUG: 'true'
-www-data:
-  image: flowman/joomla:3.5.1
-  net: none
-  command: /bin/true
-  labels:
-    io.rancher.container.start_once: true
-```
-
 Example docker-compose file
 
 ```yaml
 version: '2'
 services:
   nginx:
-    image: flowman/nginx:1.10.0
+    image: flowman/nginx:1.18.0
     ports:
      - "80:80"
     volumes_from:
       - 'joomla'
   php-fpm:
-    image: flowman/php-fpm:7.0.6
+    image: flowman/php-fpm:7.4.7
     network_mode: "service:nginx"
     volumes_from:
       - 'joomla'
     environment:
       XDEBUG: 'true'
   joomla:
-    image: flowman/joomla:3.5.1
+    image: flowman/joomla:3.9.18
     network_mode: none
 ```
 
