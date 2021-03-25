@@ -1,8 +1,10 @@
-FROM alpine:3.12
+FROM alpine:3.13.2
 
-MAINTAINER Peter Szalatnay <theotherland@gmail.com>
+LABEL maintainer="Peter Szalatnay <theotherland@gmail.com>"
 
-ENV PHP_VERSION=7.4.7 PHPREDIS_FILENAME=5.3.0.tar.gz PHP_FILENAME=php-7.4.7.tar.xz NEWRELIC_FILENAME=newrelic-php5-9.11.0.267-linux-musl.tar.gz
+ENV PHP_VERSION=7.4.16
+ENV PHP_FILENAME=php-7.4.16.tar.xz
+ENV NEWRELIC_FILENAME=newrelic-php5-9.16.0.295-linux-musl.tar.gz
 
 # Apply stack smash protection to functions using local buffers and alloca()
 # Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
@@ -19,6 +21,8 @@ RUN set -eux; \
     adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx; \
     apk add --update --no-cache \
         curl \
+        git \
+        openssh-client \
         tar \
         xz \
         libxml2 \
@@ -110,14 +114,6 @@ RUN set -eux; \
     apk add --virtual .php-rundeps $runDeps; \
     mkdir /etc/php/conf.d/; \
     echo "zend_extension=opcache.so" >> "/etc/php/conf.d/docker-php-ext-opcache.ini"; \
-    # install phpredis
-    cd /tmp; \
-    curl -fSL "https://github.com/phpredis/phpredis/archive/$PHPREDIS_FILENAME" -o "$PHPREDIS_FILENAME"; \
-    mkdir -p /tmp/phpredis; \
-    tar -xzf "$PHPREDIS_FILENAME" -C /tmp/phpredis --strip-components=1; \
-    cd /tmp/phpredis; \
-    phpize ./configure make install; \
-    echo "extension=redis.so" >> "/etc/php/conf.d/docker-php-ext-redis.ini"; \
     # install xdebug (but it will be disabled, see /etc/php/conf.d/xdebug.ini)
     cd /tmp; \
     git clone https://github.com/xdebug/xdebug.git; \
@@ -158,13 +154,11 @@ RUN set -eux; \
         echo 'catch_workers_output = yes'; \
     } | tee php-fpm.d/docker.conf
 
-COPY ./www.conf /etc/php/php-fpm.d/www.conf
-COPY ./opcache.ini ./xdebug.ini /etc/php/conf.d/
-COPY ./docker-entrypoint.sh /
+COPY dockerdir /
 
-RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Override stop signal to stop process gracefully
 # https://github.com/php/php-src/blob/17baa87faddc2550def3ae7314236826bc1b1398/sapi/fpm/php-fpm.8.in#L163
