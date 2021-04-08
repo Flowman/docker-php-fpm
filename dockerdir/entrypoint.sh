@@ -24,7 +24,6 @@ if [ "$1" = 'php-fpm' ]; then
     if [ ! -z "$XDEBUG" ]; then
         docker-php-ext-enable xdebug
 
-        sed -i -e 's/^xdebug.default_enable = 0/xdebug.default_enable = 1/g' /usr/local/etc/php/conf.d/xdebug.ini
         sed -i -e 's/^zend_extension=opcache.so/;zend_extension=opcache.so/g' /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
     fi
 fi
