@@ -14,26 +14,11 @@ This image is based on the popular Alpine Linux project, available in the alpine
 docker run -d flowman/php-fpm:tag
 ```
 
-To enable New Relic APM
-
-```bash
-docker run -d \
-           -e NEWRELIC_KEY=xxxxxx \
-           -e NEWRELIC_APP_NAME="Awesome PHP App" \
-           flowman/php-fpm:tag
-```
-
 ### Environment Variables
 
-`NEWRELIC_KEY`
+`DATADOG`
 
-This variable is optional and will enable [New Relic APM](https://newrelic.com/application-monitoring) to monitor your php application. Enter your New Relic license key.
-
-This will disable xdebug as APM is not compatible with it.
-
-`NEWRELIC_APP_NAME`
-
-This variable is optional and is used to set the application name for APM.
+This variable is optional and will enable [Datagod APM](https://docs.datadoghq.com/tracing/setup_overview/setup/php/?tab=otherenvironments) to monitor your php application.
 
 `XDEBUG`
 
