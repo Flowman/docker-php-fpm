@@ -1,54 +1,60 @@
-FROM php:7.4.20-fpm-alpine3.13
+FROM php:8.3.11-fpm-alpine3.20
 
-LABEL maintainer="Peter Szalatnay <theotherland@gmail.com>"
+ARG PHP_EXTS="intl gd mysqli zip opcache"
+ARG XDEBUG_VERSION=3.3.2
 
-ENV XDEBUG_VERSION=3.0.4
-ENV DATADOG_FILENAME=datadog-php-tracer_0.60.0_noarch.apk
+LABEL author="Peter Szalatnay <https://github.com/flowman>" \
+      description="PHP-FPM optimized for !Joomla"
 
 RUN set -eux; \
-    addgroup -S nginx; \
-    adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx; \
-    apk add --update --no-cache \
-        curl \
+    addgroup -g 101 -S nginx; \
+    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx; \
+    \
+    # Install basic packages    
+    apk add --no-cache \
         git \
-        openssh-client \
-        tar \
-        xz \
-        libxml2 \
-        readline \
-        freetype \
-        libjpeg-turbo \
-        libpng \
-        libwebp \
-        libedit \
-        libmcrypt \
-        libbz2 \
+        ghostscript \
+        imagemagick \
+        icu-libs \
         libzip \
-        libgomp \
-        imagemagick; \
+    ; \
+    \
+    # Install temporary build dependencies        
     apk add --no-cache --virtual .build-deps \
-        zlib-dev \
+        ${PHPIZE_DEPS} \
+        freetype-dev \
+        icu-dev \
+        imagemagick-dev \        
+        libjpeg-turbo-dev \
         libpng-dev \
         libwebp-dev \
-        freetype-dev \
-        libjpeg-turbo-dev \
         libzip-dev \
-        imagemagick-dev \
-        $PHPIZE_DEPS; \
-    pecl install xdebug-$XDEBUG_VERSION; \
+        linux-headers \
+    ; \
+    apk add --no-cache --virtual \
+        .docker-php-ext-enable-deps \
+    ; \
+    \
+    # Install XDEBUG extension
+    pecl install xdebug-${XDEBUG_VERSION}; \
+    docker-php-ext-enable xdebug; \
+    \
+    # Configure PHP extensions
     docker-php-ext-configure zip; \
+    docker-php-ext-configure intl; \
     docker-php-ext-configure gd \
-    --with-webp=/usr/include/ \
-    --with-freetype=/usr/include/ \
-    --with-jpeg=/usr/include/; \
-    docker-php-ext-install opcache gd mysqli zip; \
+        --with-webp=/usr/include/ \
+        --with-freetype=/usr/include/ \
+        --with-jpeg=/usr/include/; \
+    \
+    # Install PHP extensions
+    docker-php-ext-install ${PHP_EXTS}; \
     pecl install imagick; \
     docker-php-ext-enable imagick; \
-    apk del .build-deps; \
-    cd /tmp; \
-    curl -fSL "https://github.com/DataDog/dd-trace-php/releases/latest/download/$DATADOG_FILENAME" -o "$DATADOG_FILENAME"; \
-    apk add $DATADOG_FILENAME --allow-untrusted; \
-    sed -i -e 's/^extension=\/opt\/datadog-php\/extensions\/ddtrace-20190902-alpine.so/;extension=\/opt\/datadog-php\/extensions\/ddtrace-20190902-alpine.so/g' /usr/local/etc/php/conf.d/98-ddtrace.ini; \
+    \
+    # Cleanup:
+    # - remove build dependencies
+    apk del --no-network .build-deps; \
     rm -rf /tmp/*;
 
 COPY dockerdir /
@@ -57,9 +63,4 @@ RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-# Override stop signal to stop process gracefully
-# https://github.com/php/php-src/blob/17baa87faddc2550def3ae7314236826bc1b1398/sapi/fpm/php-fpm.8.in#L163
-STOPSIGNAL SIGQUIT
-
-EXPOSE 9000
 CMD ["php-fpm"]
