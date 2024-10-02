@@ -1,6 +1,6 @@
-FROM php:8.3.11-fpm-alpine3.20
+FROM php:8.3.12-fpm-alpine3.20
 
-ARG PHP_EXTS="intl gd mysqli zip opcache"
+ARG PHP_EXTS="intl gd mysqli zip opcache bcmath"
 ARG XDEBUG_VERSION=3.3.2
 
 LABEL author="Peter Szalatnay <https://github.com/flowman>" \
