@@ -1,16 +1,19 @@
-FROM php:8.3.12-fpm-alpine3.20
+FROM php:8.3.13-fpm-alpine3.20
+
+LABEL author="Peter Szalatnay <https://github.com/flowman>" \
+      description="PHP-FPM optimized for !Joomla"
 
 ARG PHP_EXTS="intl gd mysqli zip opcache bcmath"
 ARG XDEBUG_VERSION=3.3.2
 
-LABEL author="Peter Szalatnay <https://github.com/flowman>" \
-      description="PHP-FPM optimized for !Joomla"
+ENV XDEBUG_PORT=9003
+ENV XDEBUG_HOST=host.k3d.internal
 
 RUN set -eux; \
     addgroup -g 101 -S nginx; \
     adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx; \
     \
-    # Install basic packages    
+    # Install basic packages
     apk add --no-cache \
         git \
         ghostscript \
@@ -19,12 +22,12 @@ RUN set -eux; \
         libzip \
     ; \
     \
-    # Install temporary build dependencies        
+    # Install temporary build dependencies
     apk add --no-cache --virtual .build-deps \
         ${PHPIZE_DEPS} \
         freetype-dev \
         icu-dev \
-        imagemagick-dev \        
+        imagemagick-dev \
         libjpeg-turbo-dev \
         libpng-dev \
         libwebp-dev \
@@ -64,7 +67,7 @@ RUN set -eux; \
     sed -i -e 's!^//#endif$!#endif!' /tmp/imagick-3.7.0/Imagick.stub.php; \
     grep '^//#endif$' /tmp/imagick-3.7.0/Imagick.stub.php && exit 1 || :; \
     docker-php-ext-install /tmp/imagick-3.7.0; \
-    rm -rf imagick.tgz /tmp/imagick-3.7.0; \    
+    rm -rf imagick.tgz /tmp/imagick-3.7.0; \
     docker-php-ext-enable imagick; \
     \
     # Cleanup:
