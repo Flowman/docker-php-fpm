@@ -10,10 +10,10 @@ fi
 if [ "$1" = 'php-fpm' ]; then
     if [ ! -z "$XDEBUG" ]; then
         sed -i -e 's/^;zend_extension=xdebug/zend_extension=xdebug/g' /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-        sed -i -e 's/^zend_extension=opcache.so/;zend_extension=opcache.so/g' /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+        sed -i -e 's/^zend_extension=opcache/;zend_extension=opcache/g' /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
     else
         sed -i -e 's/^zend_extension=xdebug/;zend_extension=xdebug/g' /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-        sed -i -e 's/^;zend_extension=opcache.so/zend_extension=opcache.so/g' /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+        sed -i -e 's/^;zend_extension=opcache/zend_extension=opcache/g' /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
     fi
 fi
 
