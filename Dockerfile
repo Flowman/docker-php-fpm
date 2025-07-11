@@ -1,10 +1,10 @@
-FROM php:8.3.21-fpm-alpine3.21
+FROM php:8.3.23-fpm-alpine3.22
 
 LABEL author="Peter Szalatnay <https://github.com/flowman>" \
       description="PHP-FPM optimized for !Joomla"
 
 ARG PHP_EXTS="intl gd mysqli zip opcache bcmath"
-ARG XDEBUG_VERSION=3.4.3
+ARG XDEBUG_VERSION=3.4.4
 
 ENV XDEBUG_PORT=9003
 ENV XDEBUG_HOST=host.k3d.internal
